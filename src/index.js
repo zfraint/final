@@ -16,9 +16,10 @@ var MovieDetails = require('./components/MovieDetails')
 var MovieList = require('./components/MovieList')
 var NoCurrentMovie = require('./components/NoCurrentMovie')
 var SortBar = require('./components/SortBar')
+var MovieMap = require('./components/MovieMap')
 
 // There should really be some JSON-formatted data in movies.json, instead of an empty array.
-// I started writing this command to extract the data from the learn-sql workspace 
+// I started writing this command to extract the data from the learn-sql workspace
 // on C9, but it's not done yet :) You must have the csvtojson command installed on your
 // C9 workspace for this to work.
 // npm install -g csvtojson
@@ -27,8 +28,9 @@ var SortBar = require('./components/SortBar')
 // Firebase configuration
 var Rebase = require('re-base')
 var base = Rebase.createClass({
-  apiKey: "...",   // replace with your Firebase application's API key
-  databaseURL: "...", // replace with your Firebase application's database URL
+  apiKey: "AIzaSyDabmZ6uP1MOfoJ0-_XHwJJXksdigvnELk",
+  databaseURL: "https://final-5c244.firebaseio.com/",
+
 })
 
 var App = React.createClass({
@@ -58,9 +60,32 @@ var App = React.createClass({
     // We should probably do the sorting and setting of movies in state here.
     // You should really look at https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
     this.setState({
-      currentView: view
-    })
-  },
+      currentView: view
+    })
+    if (view === 'map') {
+      this.setState ({
+        latest: "",
+        alpha: "",
+        map: "active",
+      })
+    }
+    else if (view === 'latest') {
+      this.setState ({
+        movies: movieData.sort(this.movieCompareByReleased),
+        latest: "active",
+        alpha: "",
+        map: "",
+      })
+    }
+    else if (view === 'alpha') {
+      this.setState ({
+        movies: movieData.sort(this.movieCompareByTitle),
+        latest: "",
+        alpha: "active",
+        map: "",
+      })
+    }
+},
   renderMovieDetails: function() {
     if (this.state.currentMovie == null) {
       return <NoCurrentMovie resetMovieListClicked={this.resetMovieListClicked} />
@@ -73,7 +98,7 @@ var App = React.createClass({
     if (this.state.currentView === 'map') {
       return (
         <div className="col-sm-12">
-          <h3>This would be an awfully good place to put a map.</h3>
+          <MovieMap />
         </div>
       )
     } else {
@@ -107,13 +132,16 @@ var App = React.createClass({
     return {
       movies: movieData.sort(this.movieCompareByReleased),
       currentMovie: null,
-      currentView: 'latest'
+      currentView: 'latest',
+      latest: "active",
+      alpha: "",
+      map: ""
     }
   },
   componentDidMount: function() {
     // We'll need to enter our Firebase configuration at the top of this file and
     // un-comment this to make the Firebase database work
-    // base.syncState('/movies', { context: this, state: 'movies', asArray: true })
+    base.syncState('movies', { context: this, state: 'movies', asArray: true })
   },
   render: function() {
     return (
